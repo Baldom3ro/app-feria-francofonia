@@ -3,7 +3,7 @@
         Administración General de Participantes
     </x-slot>
 
-    <div x-data="{ createModal: false }">
+    <div x-data="{ createModal: false, qrModal: false, qrUrl: '', qrName: '' }">
         <!-- Actions & Search -->
         <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
             <form action="{{ route('participants.index') }}" method="GET" class="w-full sm:w-1/3">
@@ -25,9 +25,7 @@
                             <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Correo / Email</th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Ubicación</th>
                             <th class="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Registro</th>
-                            @if(auth()->user()->rol === 'admin')
-                            <th class="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Borrar</th>
-                            @endif
+                            <th class="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Acciones</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
@@ -41,16 +39,20 @@
                             <td class="px-6 py-4 text-sm text-gray-600">{{ $participant->city }}, {{ $participant->municipality }}</td>
                             <td class="px-6 py-4 text-right text-sm text-gray-500">{{ $participant->created_at->format('d M Y') }}</td>
                             
-                            @if(auth()->user()->rol === 'admin')
                             <td class="px-6 py-4 text-right text-sm font-medium">
+                                <button @click.prevent="qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={{ urlencode($participant->id) }}&margin=1'; qrName = '{{ addslashes($participant->name) }} {{ addslashes($participant->paternalLastName) }}'; qrModal = true" class="inline-flex items-center text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 p-2 rounded-xl transition mr-2" title="Ver Código QR">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
+                                </button>
+                                
+                                @if(auth()->user()->rol === 'admin')
                                 <form action="{{ route('participants.destroy', $participant) }}" method="POST" class="inline-block" onsubmit="return confirm('¿Seguro que deseas eliminar el registro de este participante? Toda su data pasará a nula.');">
                                     @csrf @method('DELETE')
-                                    <button type="submit" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-2 rounded-xl transition">
+                                    <button type="submit" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-2 rounded-xl transition" title="Eliminar Participante">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                     </button>
                                 </form>
+                                @endif
                             </td>
-                            @endif
                         </tr>
                         @empty
                         <tr>
@@ -140,6 +142,41 @@
                             </button>
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- QR Modal -->
+        <div x-show="qrModal" style="display: none;" class="fixed inset-0 z-50 overflow-y-auto">
+            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+                <div @click="qrModal = false" x-transition.opacity class="fixed inset-0 bg-gray-900 bg-opacity-75 backdrop-blur-sm transition-opacity"></div>
+                
+                <div x-show="qrModal" 
+                     x-transition:enter="ease-out duration-300" 
+                     x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
+                     x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" 
+                     class="relative bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:max-w-md w-full p-8 text-center">
+                    
+                    <button @click="qrModal = false" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 focus:outline-none">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+
+                    <h3 class="text-xl font-black text-[#4F46E5] mb-2" x-text="qrName"></h3>
+                    <p class="text-gray-500 mb-6 font-medium text-sm">Gafete Digital Oficial</p>
+                    
+                    <div class="bg-gray-50 p-6 rounded-2xl inline-block border border-gray-100 shadow-inner mb-6">
+                        <img :src="qrUrl" alt="Código QR del Participante" class="w-48 h-48 mx-auto mix-blend-multiply">
+                    </div>
+                    
+                    <div class="bg-indigo-50 text-indigo-800 text-sm p-4 rounded-xl border border-indigo-100">
+                        El código QR es único e intransferible. Muestra este código en los stands para registrar la visita.
+                    </div>
+                    
+                    <div class="mt-8">
+                        <button @click="qrModal = false" class="w-full bg-[#4F46E5] text-white font-bold py-3 rounded-xl shadow-lg hover:bg-indigo-700 transition">
+                            Cerrar
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
