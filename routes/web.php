@@ -29,7 +29,7 @@ Route::middleware('auth')->group(function () {
     // Admin & Supervisor
     Route::middleware('role:admin,supervisor')->group(function () {
         Route::resource('stands', StandController::class);
-        Route::resource('participants', ParticipantController::class);
+        Route::resource('participants', ParticipantController::class)->except(['create', 'store']);
         Route::get('/surveys', [SurveyController::class, 'index'])->name('surveys.index');
     });
     

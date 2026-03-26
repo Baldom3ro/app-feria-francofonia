@@ -23,6 +23,11 @@ class ParticipantController extends Controller
         return view('admin.participants.index', compact('participants'));
     }
 
+    public function create()
+    {
+        return view('participants.create');
+    }
+
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -50,10 +55,12 @@ class ParticipantController extends Controller
     
     // Si se necesitara editar más adelante, se pueden agregar métodos edit/update aquí.
     
-    public function destroy(Participant $participant)
+    public function destroy(Request $request, Participant $participant)
     {
         // Solo administradores pueden eliminar asistentes registrados.
-        abort_if(auth()->user()->rol !== 'admin', 403);
+        /** @var \App\Models\User $user */
+        $user = $request->user();
+        abort_if($user->rol !== 'admin', 403);
 
         $participant->delete();
         return redirect()->route('participants.index')->with('success', 'Participante eliminado.');
