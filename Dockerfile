@@ -9,7 +9,13 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     libxml2-dev \
     nodejs \
-    npm
+    npm \
+    libjpeg-dev \
+    libfreetype6-dev
+
+# Instalar extensión GD
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd
 
 # Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
