@@ -14,6 +14,18 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     /**
+     * Envía la notificación de restablecimiento de contraseña.
+     * Sobrescribimos la de Laravel para usar nuestro mail premium en español.
+     *
+     * @param  string  $token
+     * @return void
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new \App\Notifications\ResetPasswordNotification($token));
+    }
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var list<string>

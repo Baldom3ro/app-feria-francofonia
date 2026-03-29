@@ -15,6 +15,7 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
+        // Admin o Supervisor → dashboard completo
         if ($user->rol === 'admin' || $user->rol === 'supervisor') {
             $totalParticipants = Participant::count();
             $totalVisits = Visit::count();
@@ -31,11 +32,14 @@ class DashboardController extends Controller
             ));
         }
 
-        // Standard user (stand worker)
+        // Usuario de stand
         if ($user->rol === 'user') {
             $stand = Stand::find($user->standId);
+
             if (!$stand) {
-                abort(403, 'No tienes un stand asignado.');
+                // En vez de abort(403), redirigir a la página personalizada con mensaje claro
+                return redirect()->route('access.denied')
+                    ->with('required_roles', 'usuario con stand asignado');
             }
 
             $recentVisits = Visit::with('participant')
@@ -47,6 +51,8 @@ class DashboardController extends Controller
             return view('dashboard.stand', compact('stand', 'recentVisits'));
         }
 
-        abort(403, 'Invalid Role');
+        // Rol no reconocido o NULL → redirigir a 403 personalizada
+        return redirect()->route('access.denied')
+            ->with('required_roles', 'admin, supervisor o user');
     }
 }

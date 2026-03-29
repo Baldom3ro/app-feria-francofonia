@@ -7,7 +7,13 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ParticipantController;
 use App\Http\Controllers\VisitController;
 use App\Http\Controllers\SurveyController;
+use App\Http\Controllers\Auth\SessionManagerController;
 use Illuminate\Support\Facades\Route;
+
+// Página de acceso denegado (pública — solo muestra un mensaje, no requiere auth)
+Route::get('/acceso-denegado', function () {
+    return view('errors.403');
+})->name('access.denied');
 
 Route::get('/', function () {
     return view('welcome');

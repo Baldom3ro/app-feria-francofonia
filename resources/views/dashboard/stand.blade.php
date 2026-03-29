@@ -30,7 +30,12 @@
     </style>
 
     <!-- Alpine App Logic Container -->
-    <div x-data="standApp()" @scan-success.window="registerVisit($event.detail)" class="relative h-full">
+    <div x-data="standApp()"
+         @scan-success.window="registerVisit($event.detail)"
+         class="relative h-full"
+         data-stand-id="{{ $stand->id }}"
+         data-visit-url="{{ route('visits.store') }}"
+         data-survey-url="{{ route('surveys.store') }}">
 
         <!-- Custom Toast Notification -->
         <div x-show="showToast" x-transition.opacity style="display: none;" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
@@ -225,6 +230,12 @@
 
     <!-- Scanner Setup -->
     <script>
+        /* Read server-rendered data from data-* attributes on the root div */
+        const _root     = document.currentScript.previousElementSibling || document.querySelector('[data-stand-id]');
+        let STAND_ID   = parseInt(document.querySelector('[data-stand-id]').dataset.standId, 10);
+        let VISIT_URL  = document.querySelector('[data-visit-url]').dataset.visitUrl;
+        let SURVEY_URL = document.querySelector('[data-survey-url]').dataset.surveyUrl;
+
         let html5QrcodeScanner = null;
 
         function standApp() {
@@ -247,14 +258,14 @@
                     document.getElementById('scannerStatusTitle').innerText = 'Procesando...';
                     
                     try {
-                        let res = await fetch('{{ route('visits.store') }}', {
+                        let res = await fetch(VISIT_URL, {
                             method: 'POST',
                             headers: { 
                                 'Content-Type': 'application/json', 
                                 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content, 
                                 'Accept': 'application/json' 
                             },
-                            body: JSON.stringify({ standId: {{ $stand->id }}, participantId: participantId })
+                            body: JSON.stringify({ standId: STAND_ID, participantId: participantId })
                         });
                         let data = await res.json();
                         
@@ -282,14 +293,14 @@
                     this.isProcessing = true;
                     
                     try {
-                        let res = await fetch('{{ route('surveys.store') }}', {
+                        let res = await fetch(SURVEY_URL, {
                             method: 'POST',
                             headers: { 
                                 'Content-Type': 'application/json', 
                                 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content, 
                                 'Accept': 'application/json' 
                             },
-                            body: JSON.stringify({ standId: {{ $stand->id }}, participantId: this.scanParticipantId, rating: this.rating })
+                            body: JSON.stringify({ standId: STAND_ID, participantId: this.scanParticipantId, rating: this.rating })
                         });
                         let data = await res.json();
                         
